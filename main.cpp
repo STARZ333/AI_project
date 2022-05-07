@@ -242,12 +242,18 @@ void output_result(Node *n)
 	Node *node;
 	cout << "傳教士\t食人族\t船\tstep\n";
 	node = n;
+	cout<<node->m<< "\t" << node->c << "\t" << node->b << "\t" << node->step << endl;
 	// cout << node->step << endl;
 	// cout << node->parent->step;
-	for (int i = 0; node->parent!=NULL;i++)
+	while(1)
 	{
-        
-		cout << node->m << "\t" << node->c << "\t" << node->b << "\t" << node->step << endl;
+        // step_list[node.parent_count].m
+		cout << step_list[node->parent_count].m << "\t" << step_list[node->parent_count].c << "\t" << step_list[node->parent_count].b << "\t" << step_list[node->parent_count].step << endl;
+		
+		if (step_list[node->parent_count].m == m_num && step_list[node->parent_count].c == c_num && step_list[node->parent_count].b == 1)
+		{
+			break;
+		}
 		node = node->parent;
 	}
 }
@@ -295,7 +301,7 @@ int main()
 	// {
 	// 	cout << step_list[i].m << endl;
 	// }
-	// output_result(ptrresult);
-	cout <<"s0:"<< step_list[0].m << step_list[0].c << step_list[0].b << endl;
+	output_result(&result);
+	// cout <<"s0:"<< step_list[0].m << step_list[0].c << step_list[0].b << endl;
 		return 0;
 }
