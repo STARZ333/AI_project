@@ -13,9 +13,10 @@ struct Node
 	int c;
 	int b;
 	int step;
+	int parent_count;
 	double f_loss;
 	Node *parent;
-	Node(int m_num, int c_num, int boat_state, int step_count, Node *ptr) : m{m_num}, c{c_num}, b{boat_state}, step{step_count}, parent{ptr}
+	Node(int m_num, int c_num, int boat_state, int step_count, Node *ptr,int parent_count) : m{m_num}, c{c_num}, b{boat_state}, step{step_count}, parent{ptr},parent_count{parent_count}
 	{
 		f_loss = (m + c) / 2;
 	}
@@ -24,6 +25,7 @@ struct Node
 
 deque<Node> opened_list;
 vector<int> closed_list;
+deque<Node> output_closed_list;
 Node *step_list = NULL;
 Node *more_step_list = NULL;
 int step_list_count = 0;
@@ -69,7 +71,7 @@ void sort_by_floss()
 			{
 				swap(i, j);
 			}
-			else if (i->step > j->step)
+			if (i->f_loss==j->f_loss&&i->step > j->step)
 			{
 				swap(i, j);
 			}
@@ -89,32 +91,41 @@ int countt = 1;
 
 void check_openlist()
 {
-	cout << countt << ":";
+	cout <<"open list "<< countt << ":";
 	for (deque<Node>::iterator it = opened_list.begin(); it != opened_list.end(); it++)
 	{
+        
 		cout << it->m << " " << it->c << " " << it->b << " " << it->step << "/";
 	}
 	cout << endl;
 	countt++;
 }
+void check_closelist(){
+    cout <<"close list "<< countt << ":";
+    for (deque<Node>::iterator it = output_closed_list.begin(); it != output_closed_list.end(); it++)
+	{
+		cout << it->m << " " << it->c << " " << it->b << " " << it->step << "/";
+	}
+    cout << endl;
+}
 void refresh_opened(Node n)
 { // 如果有較低的分數，更新opened_list
 	// cout << countt << ":";
-	for (deque<Node>::iterator it = opened_list.begin(); it != opened_list.end(); it++)
-	{
-		// cout << it->m << " " << it->c << " " << it->step<<"/";
-		if (it->m == n.m && it->c == n.c && it->b == n.b)
-		{
-			if (n.f_loss < it->f_loss)
-			{
-				memcpy(&it, &n, sizeof(Node));
-			}
-			return;
-		}
-	}
+	// for (deque<Node>::iterator it = opened_list.begin(); it != opened_list.end(); it++)
+	// {
+	// 	// cout << it->m << " " << it->c << " " << it->step<<"/";
+	// 	if (it->m == n.m && it->c == n.c && it->b == n.b)
+	// 	{
+	// 		if (n.f_loss < it->f_loss)
+	// 		{
+	// 			memcpy(&it, &n, sizeof(Node));
+	// 		}
+	// 		return;
+	// 	}
+	// }
 	// cout << endl;
 	// countt++;
-	opened_list.push_back(Node(n.m, n.c, n.b, n.step, n.parent));
+	opened_list.push_back(Node(n.m, n.c, n.b, n.step, n.parent,n.parent_count));
 }
 
 void a_star_algorithm(Node &result)
@@ -130,10 +141,17 @@ void a_star_algorithm(Node &result)
 		opened_list.pop_front();
 		cout << endl;
 		cout << "choose node state:" << node.m << " " << node.c << " " << node.b << " " << node.step << endl;
-
+		// cout << "s0address:" << &step_list[0] << endl;
 		if (counter >= 2)
-			cout << "node parent state:" << node.parent->m << " " << node.parent->c << " " << node.parent->b << " " << node.parent->step << endl;
+        {
+            cout << "node parent state:" << step_list[node.parent_count].m << " " << step_list[node.parent_count].c << " " << step_list[node.parent_count].b << " " << step_list[node.parent_count].step << endl;
+        }
+		if (counter >= 2)
+        {
+            check_closelist();
+        }	
 		counter++;
+        
 		// 判斷取出的點是否為目標點
 		if (node.m == 0 && node.c == 0 && node.b == 0)
 		{
@@ -154,7 +172,8 @@ void a_star_algorithm(Node &result)
 
 		// 將取出的點加入closed_list中
 		closed_list.push_back(cal_value(node));
-		for (int i = 0; i <= shore_m; i++)
+        output_closed_list.push_back(node);
+        for (int i = 0; i <= shore_m; i++)
 		{ // i代表上船的傳教士數量
 			for (int j = 0; j <= shore_c; j++)
 			{ // j代表上船的食人魔數量
@@ -166,7 +185,12 @@ void a_star_algorithm(Node &result)
 				if (node.b == 1)
 				{ // 船在左側，下一狀態船在右側
 					// Node node2 = (node.m - i, node.c - j, 0, node.step + 1, &step_list[step_list_count - 1]);
-					Node child_node(node.m - i, node.c - j, 0, node.step + 1, &step_list[step_list_count-1]);
+					Node child_node(node.m - i, node.c - j, 0, node.step + 1, &step_list[step_list_count-1],step_list_count-1);
+					// Node child_node(node.m - i, node.c - j, 0, node.step + 1, &step_list[0]);
+
+					// cout <<"step_list[step_list_count - 1].m:"<< step_list[step_list_count - 1].m << endl;
+					// cout << "steplistcount" << step_list_count - 1 << endl;
+					// cout <<"s0:"<< step_list[0].m << step_list[0].c << step_list[0].b << endl;
 					// Node child_node = (node.m - i, node.c - j, 0, node.step + 1, nullptr);
 
 					step_list_count++;
@@ -186,8 +210,13 @@ void a_star_algorithm(Node &result)
 				else
 				{ // 船在右側，下一狀態船在左側
 					
-					Node child_node(node.m + i, node.c + j, 1, node.step + 1, &step_list[step_list_count-1]);
-					// Node child_node(node.m - i, node.c - j, 0, node.step + 1, nullptr);
+					Node child_node(node.m + i, node.c + j, 1, node.step + 1, &step_list[step_list_count-1],step_list_count-1);
+					// Node child_node(node.m + i, node.c + j, 1, node.step + 1, &step_list[0]);
+
+					// cout <<"s0:"<< step_list[0].m << step_list[0].c << step_list[0].b << endl;
+
+					// cout <<"step_list[step_list_count - 1].m:"<< step_list[step_list_count - 1].m << endl;
+					// cout << "steplistcount" << step_list_count - 1 << endl;
 					step_list_count++;
 					more_step_list = (Node *)realloc(step_list, step_list_count * sizeof(Node));
 					step_list = more_step_list;
@@ -205,6 +234,7 @@ void a_star_algorithm(Node &result)
 		}
 		sort_by_floss();
 		check_openlist();
+        
 	}
 }
 void output_result(Node *n)
@@ -216,6 +246,7 @@ void output_result(Node *n)
 	// cout << node->parent->step;
 	for (int i = 0; node->parent!=NULL;i++)
 	{
+        
 		cout << node->m << "\t" << node->c << "\t" << node->b << "\t" << node->step << endl;
 		node = node->parent;
 	}
@@ -231,15 +262,16 @@ int main()
 	// cin >> c_num;
 	m_num = 3;
 	c_num = 3;
-	Node start_node(m_num, c_num, 1, 0, nullptr);
+	Node start_node(m_num, c_num, 1, 0, nullptr,-1);
 	
-	opened_list.push_back(start_node);
+	opened_list.push_front(start_node);
 	//宣告起始節點，放入steplist
 	step_list_count++;
 	more_step_list = (Node *)realloc(step_list, step_list_count * sizeof(Node));
 	step_list = more_step_list;
 	step_list[step_list_count - 1] = start_node;
 
+	cout <<"s0:"<< step_list[0].m << step_list[0].c << step_list[0].b <<" " <<&step_list[0]<< endl;
 	// Node start_node2(start_node.m+2, c_num, 1, 0, &step_list[step_list_count-1]);
 	// step_list_count++;
 	// more_step_list = (Node *)realloc(step_list, step_list_count * sizeof(Node));
@@ -253,14 +285,6 @@ int main()
 	// }
 	// cout << start_node2.parent->m<<endl;
 	
-
-	
-
-	// step_list_count
-	// cout << "re:" << result.parent->step << endl;
-	// cout << result.step << endl;
-
-	
 	Node result;
 	Node *ptrresult;
 	ptrresult = &result;
@@ -271,6 +295,7 @@ int main()
 	// {
 	// 	cout << step_list[i].m << endl;
 	// }
-	output_result(ptrresult);
+	// output_result(ptrresult);
+	cout <<"s0:"<< step_list[0].m << step_list[0].c << step_list[0].b << endl;
 		return 0;
 }
