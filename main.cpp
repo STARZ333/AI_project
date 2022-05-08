@@ -23,7 +23,7 @@ struct Node
 	Node(int m_num, int c_num, int A_boat_state, int B_boat_state, int bcount, int Bcount, int step_count, Node *ptr) : m{m_num}, c{c_num}, b{A_boat_state}, B{B_boat_state}, b_count{bcount}, B_count{Bcount}, step{step_count}, parent{ptr}
 	{
 		// f_loss = (m + c) / 2;
-        f_loss = b_count * 3 + B_count * 25 ;
+        f_loss =step+ b_count * 3 + B_count * 25 + (m+c)*5;
     }
 	Node(): m{0}, c{0}, b{0}, B{0}, b_count{0}, B_count{0}, step{0}, f_loss{0}, parent{nullptr} {};
 };
@@ -65,7 +65,7 @@ void check_openlist()
 {
 	cout<<"openlist:";
  	for(deque<Node>::iterator it=opened_list.begin(); it!=opened_list.end();it++){
-  		cout << it->m << " " << it->c << " " << it->b << " " << it->step<<"/";
+  		cout << it->m << " " << it->c << " " << it->b << " "<< it->B << " " << it->f_loss<<"/";
  	}
  	cout << endl;
 }
@@ -118,17 +118,19 @@ void sort_by_floss()
 
 void refresh_opened(Node *n)
 { // 如果節點有較低的分數或步數，更新opened_list
-	for (auto x : opened_list)
-	{
-		if (x.m == n->m && x.c == n->c && x.b == n->b)
-		{
-			if (n->f_loss < x.f_loss || n->step < x.step)
-			{
-				memcpy(&x, n, sizeof(Node));
-			}
-			return;
-		}
-	}
+	// for (auto x : opened_list)
+	// {
+	// 	if (x.m == n->m && x.c == n->c && x.b == n->b)
+	// 	{
+	// 		// if (n->f_loss < x.f_loss || n->step < x.step)
+    //  		if (n->f_loss < x.f_loss)
+
+	// 		{
+	// 			memcpy(&x, n, sizeof(Node));
+	// 		}
+	// 		return;
+	// 	}
+	// }
 	opened_list.push_back(Node(n->m, n->c, n->b,n->B,n->b_count,n->B_count, n->step, n->parent));
 }
 void a_star_algorithm()
@@ -139,6 +141,8 @@ void a_star_algorithm()
 		Node node;
 		node = opened_list.front();
 		opened_list.pop_front();
+        cout << endl;
+		cout << "choose node state:" << node.m << " " << node.c << " " << node.b << " " << node.step << endl;
 		// cout<<node.step<<" ";
 		closed_list.push_back(Node(node.m, node.c, node.b, node.B,node.b_count,node.B_count, node.step, node.parent)); // 將取出的點加入closed_list中
 		// 判斷取出的點是否為目標點
